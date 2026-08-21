@@ -1,3 +1,7 @@
-from app import app
+import sys
+import os
 
-# Vercel mengenali WSGI application variable 'app'
+# Menambahkan root direktori ke path pencarian modul Python
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from app import app
