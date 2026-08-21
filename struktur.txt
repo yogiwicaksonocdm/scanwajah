@@ -1,0 +1,7 @@
+absensi_app/
+├── app.py
+├── database.db (dibuat otomatis)
+└── templates/
+    ├── base.html
+    ├── dashboard.html
+    └── scan.html
