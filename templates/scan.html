@@ -4,6 +4,17 @@
     <h2 class="text-xl font-bold text-slate-900 mb-1">Scan Wajah Absensi</h2>
     <p class="text-sm text-slate-500 mb-4">Posisikan wajah tepat di dalam bingkai kamera.</p>
 
+    <!-- Pilih Lokasi -->
+    <div class="mb-4 text-left">
+        <label class="block text-sm font-medium text-slate-700 mb-1">Lokasi / Ruangan Absen</label>
+        <select id="locationSelect" class="w-full rounded-md border border-slate-300 p-2 text-sm focus:border-indigo-500 focus:outline-none bg-white">
+            {% for loc in locations %}
+            <option value="{{ loc.id }}">{{ loc.name }}</option>
+            {% endfor %}
+        </select>
+        <p class="text-xs text-slate-400 mt-1">Waktu scan akan menyesuaikan timezone lokasi ini.</p>
+    </div>
+
     <div class="relative bg-black rounded-xl overflow-hidden aspect-video mx-auto mb-4 border-2 border-indigo-500 shadow-inner">
         <video id="webcam" autoplay playsinline class="w-full h-full object-cover"></video>
         <canvas id="canvas" class="hidden"></canvas>
@@ -19,6 +30,7 @@
     const canvas = document.getElementById('canvas');
     const statusMsg = document.getElementById('statusMsg');
     const statusBox = document.getElementById('statusBox');
+    const locationSelect = document.getElementById('locationSelect');
     let isProcessing = false;
 
     navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } })
@@ -41,17 +53,19 @@
         canvas.getContext('2d').drawImage(video, 0, 0);
         const base64Img = canvas.toDataURL('image/jpeg', 0.8);
 
+        const selectedLocationId = locationSelect.value;
+
         try {
             const res = await fetch('/api/verify-face', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ image: base64Img })
+                body: JSON.stringify({ image: base64Img, location_id: selectedLocationId ? parseInt(selectedLocationId) : null })
             });
             const data = await res.json();
 
             if (data.status === 'success') {
                 statusBox.className = "p-4 rounded-lg bg-green-100 border border-green-300";
-                statusMsg.innerHTML = `✓ Absen Berhasil!<br><span class="text-base text-green-800 font-bold">${data.name}</span> (${data.nisn})<br><span class="text-xs text-slate-500">${data.time}</span>`;
+                statusMsg.innerHTML = `✓ Absen Berhasil!<br><span class="text-base text-green-800 font-bold">${data.name}</span> (${data.nisn})<br><span class="text-xs text-slate-500">${data.location} &bull; ${data.time}</span>`;
                 setTimeout(() => {
                     statusBox.className = "p-4 rounded-lg bg-slate-100 border border-slate-200";
                     statusMsg.innerText = "Mencari wajah...";
