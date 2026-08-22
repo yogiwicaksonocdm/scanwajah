@@ -10,8 +10,9 @@
     <nav class="bg-indigo-600 text-white shadow-md">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between h-16 items-center">
             <span class="font-bold text-lg tracking-wide">E-Absensi FaceScan</span>
-            <div class="flex space-x-4">
-                <a href="{{ url_for('dashboard') }}" class="hover:bg-indigo-700 px-3 py-2 rounded-md font-medium text-sm">Dashboard & CRUD</a>
+            <div class="flex space-x-2">
+                <a href="{{ url_for('dashboard') }}" class="hover:bg-indigo-700 px-3 py-2 rounded-md font-medium text-sm">Dashboard</a>
+                <a href="{{ url_for('riwayat') }}" class="hover:bg-indigo-700 px-3 py-2 rounded-md font-medium text-sm">Riwayat</a>
                 <a href="{{ url_for('scan_page') }}" class="bg-indigo-800 hover:bg-indigo-900 px-3 py-2 rounded-md font-medium text-sm">Buka Scanner</a>
             </div>
         </div>

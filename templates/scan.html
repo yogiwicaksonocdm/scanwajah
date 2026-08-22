@@ -65,14 +65,14 @@
 
             if (data.status === 'success') {
                 statusBox.className = "p-4 rounded-lg bg-green-100 border border-green-300";
-                statusMsg.innerHTML = `✓ Absen Berhasil!<br><span class="text-base text-green-800 font-bold">${data.name}</span> (${data.nisn})<br><span class="text-xs text-slate-500">${data.location} &bull; ${data.time}</span>`;
+                statusMsg.innerHTML = `✓ Absen Berhasil!<br><span class="text-base text-green-800 font-bold">${data.name}</span> (${data.nisn})<br><span class="text-xs text-slate-500">${data.class} &bull; ${data.location} &bull; ${data.time}</span>`;
                 setTimeout(() => {
                     statusBox.className = "p-4 rounded-lg bg-slate-100 border border-slate-200";
                     statusMsg.innerText = "Mencari wajah...";
                 }, 3500);
             } else if (data.status === 'already_absent') {
                 statusBox.className = "p-4 rounded-lg bg-orange-100 border border-orange-300";
-                statusMsg.innerHTML = `⚠ Sudah Absen Hari Ini<br><span class="text-base text-orange-800 font-bold">${data.name}</span> (${data.nisn})<br><span class="text-xs text-slate-500">Anda sudah melakukan absensi hari ini.</span>`;
+                statusMsg.innerHTML = `⚠ Sudah Absen Hari Ini<br><span class="text-base text-orange-800 font-bold">${data.name}</span> (${data.nisn})<br><span class="text-xs text-slate-500">Kelas: ${data.class} &bull; Anda sudah melakukan absensi hari ini.</span>`;
                 setTimeout(() => {
                     statusBox.className = "p-4 rounded-lg bg-slate-100 border border-slate-200";
                     statusMsg.innerText = "Mencari wajah...";

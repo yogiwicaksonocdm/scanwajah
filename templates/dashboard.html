@@ -14,6 +14,10 @@
                 <input type="text" id="name" required class="mt-1 block w-full rounded-md border border-slate-300 p-2 text-sm focus:border-indigo-500 focus:outline-none">
             </div>
             <div>
+                <label class="block text-sm font-medium text-slate-700">Kelas</label>
+                <input type="text" id="studentClass" placeholder="contoh: XII IPA 1" required class="mt-1 block w-full rounded-md border border-slate-300 p-2 text-sm focus:border-indigo-500 focus:outline-none">
+            </div>
+            <div>
                 <label class="block text-sm font-medium text-slate-700 mb-1">Ambil Foto Wajah</label>
                 <div class="relative bg-black rounded-lg overflow-hidden h-44 flex items-center justify-center">
                     <video id="webcam" autoplay playsinline class="w-full h-full object-cover"></video>
@@ -27,7 +31,7 @@
         </form>
     </div>
 
-    <!-- Tabel Data Siswa & Log Absen -->
+    <!-- Tabel Data Siswa & Lokasi -->
     <div class="lg:col-span-2 space-y-6">
         <!-- Manajemen Lokasi -->
         <div class="bg-white p-6 rounded-xl shadow border border-slate-200">
@@ -39,15 +43,7 @@
                     <option value="Asia/Makassar">WITA (Makassar)</option>
                     <option value="Asia/Jayapura">WIT (Jayapura)</option>
                     <option value="Asia/Pontianak">WIB (Pontianak)</option>
-                    <option value="Asia/Jakarta">WIB (Semarang)</option>
-                    <option value="Asia/Jakarta">WIB (Bandung)</option>
-                    <option value="Asia/Pontianak">WIB (Pontianak)</option>
                     <option value="Asia/Palangkaraya">WIB (Palangkaraya)</option>
-                    <option value="Asia/Makassar">WITA (Balikpapan)</option>
-                    <option value="Asia/Makassar">WITA (Banjarmasin)</option>
-                    <option value="Asia/Makassar">WITA (Manado)</option>
-                    <option value="Asia/Jayapura">WIT (Merauke)</option>
-                    <option value="Asia/Jayapura">WIT (Sorong)</option>
                 </select>
                 <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm font-medium transition whitespace-nowrap">+ Tambah</button>
             </form>
@@ -81,6 +77,7 @@
             </div>
         </div>
 
+        <!-- Daftar Siswa -->
         <div class="bg-white p-6 rounded-xl shadow border border-slate-200">
             <h2 class="text-lg font-bold text-slate-900 mb-4">Daftar Siswa Terdaftar</h2>
             <div class="overflow-x-auto">
@@ -89,6 +86,7 @@
                         <tr>
                             <th class="p-3">NISN</th>
                             <th class="p-3">Nama</th>
+                            <th class="p-3">Kelas</th>
                             <th class="p-3 text-right">Aksi</th>
                         </tr>
                     </thead>
@@ -97,6 +95,7 @@
                         <tr>
                             <td class="p-3 font-medium">{{ s.nisn }}</td>
                             <td class="p-3">{{ s.name }}</td>
+                            <td class="p-3 text-xs font-medium text-indigo-600">{{ s.class }}</td>
                             <td class="p-3 text-right">
                                 <form action="{{ url_for('delete_student', id=s.id) }}" method="POST" onsubmit="return confirm('Hapus siswa ini?');">
                                     <button class="text-red-600 hover:text-red-800 font-medium text-xs">Hapus</button>
@@ -105,37 +104,7 @@
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="3" class="p-3 text-center text-slate-400">Belum ada data siswa.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="bg-white p-6 rounded-xl shadow border border-slate-200">
-            <h2 class="text-lg font-bold text-slate-900 mb-4">Riwayat Absensi Terakhir</h2>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm text-slate-600">
-                    <thead class="bg-slate-100 text-slate-800 font-semibold uppercase text-xs">
-                        <tr>
-                            <th class="p-3">Waktu</th>
-                            <th class="p-3">NISN</th>
-                            <th class="p-3">Nama</th>
-                            <th class="p-3">Lokasi</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-200">
-                        {% for log in logs %}
-                        <tr>
-                            <td class="p-3 text-xs">{{ log.timestamp }}</td>
-                            <td class="p-3 font-medium">{{ log.nisn }}</td>
-                            <td class="p-3">{{ log.name }}</td>
-                            <td class="p-3 text-xs font-medium text-indigo-600">{{ log.location_name }}</td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="4" class="p-3 text-center text-slate-400">Belum ada log absensi.</td>
+                            <td colspan="4" class="p-3 text-center text-slate-400">Belum ada data siswa.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -176,6 +145,7 @@
         const formData = new FormData();
         formData.append('nisn', document.getElementById('nisn').value);
         formData.append('name', document.getElementById('name').value);
+        formData.append('class', document.getElementById('studentClass').value);
         formData.append('image_data', imageDataInput.value);
 
         const res = await fetch('/student/add', { method: 'POST', body: formData });

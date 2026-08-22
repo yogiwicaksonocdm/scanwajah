@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="space-y-6">
+    <div class="bg-white p-6 rounded-xl shadow border border-slate-200">
+        <h2 class="text-lg font-bold text-slate-900 mb-4">Riwayat Absensi</h2>
+
+        <!-- Filter -->
+        <form method="GET" action="{{ url_for('riwayat') }}" class="flex flex-wrap gap-3 mb-6 items-end">
+            <div class="flex-1 min-w-[180px]">
+                <label class="block text-xs font-medium text-slate-500 mb-1">Kelas</label>
+                <select name="kelas" class="w-full rounded-md border border-slate-300 p-2 text-sm focus:border-indigo-500 focus:outline-none bg-white">
+                    <option value="">Semua Kelas</option>
+                    {% for k in kelas_list %}
+                    <option value="{{ k.class }}" {% if filter_kelas == k.class %}selected{% endif %}>{{ k.class }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex-1 min-w-[180px]">
+                <label class="block text-xs font-medium text-slate-500 mb-1">Lokasi</label>
+                <select name="lokasi" class="w-full rounded-md border border-slate-300 p-2 text-sm focus:border-indigo-500 focus:outline-none bg-white">
+                    <option value="">Semua Lokasi</option>
+                    {% for l in lokasi_list %}
+                    <option value="{{ l.id }}" {% if filter_lokasi|string == l.id|string %}selected{% endif %}>{{ l.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex-1 min-w-[180px]">
+                <label class="block text-xs font-medium text-slate-500 mb-1">Tanggal</label>
+                <input type="date" name="tanggal" value="{{ filter_tanggal }}" class="w-full rounded-md border border-slate-300 p-2 text-sm focus:border-indigo-500 focus:outline-none">
+            </div>
+            <div class="flex gap-2">
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm font-medium transition">Filter</button>
+                <a href="{{ url_for('riwayat') }}" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded text-sm font-medium transition">Reset</a>
+            </div>
+        </form>
+
+        <!-- Tabel Riwayat -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-slate-600">
+                <thead class="bg-slate-100 text-slate-800 font-semibold uppercase text-xs">
+                    <tr>
+                        <th class="p-3">No</th>
+                        <th class="p-3">Waktu</th>
+                        <th class="p-3">NISN</th>
+                        <th class="p-3">Nama</th>
+                        <th class="p-3">Kelas</th>
+                        <th class="p-3">Lokasi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                    {% for log in logs %}
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-3 text-slate-400">{{ loop.index }}</td>
+                        <td class="p-3 text-xs font-mono">{{ log.timestamp }}</td>
+                        <td class="p-3 font-medium">{{ log.nisn }}</td>
+                        <td class="p-3">{{ log.name }}</td>
+                        <td class="p-3 text-xs font-medium text-indigo-600">{{ log.class }}</td>
+                        <td class="p-3 text-xs font-medium text-emerald-600">{{ log.location_name }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="p-6 text-center text-slate-400">Tidak ada data absensi ditemukan.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if logs %}
+        <div class="mt-4 text-xs text-slate-400 text-right">
+            Menampilkan {{ logs|length }} data
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
