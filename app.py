@@ -262,8 +262,22 @@ def verify_face():
     )
 
     if match[0]:
-      # Rekam absensi dengan waktu lokal sesuai lokasi
+      # Cek apakah siswa sudah absen hari ini
       now_local = get_time_for_tz(scan_tz)
+      today_str = now_local.strftime("%Y-%m-%d")
+      already_absent = conn.execute(
+          "SELECT id FROM attendance WHERE student_id = ? AND timestamp LIKE ?",
+          (student["id"], today_str + "%"),
+      ).fetchone()
+      if already_absent:
+        return jsonify({
+            "status": "already_absent",
+            "message": f'{student["name"]} sudah absen hari ini.',
+            "nisn": student["nisn"],
+            "name": student["name"],
+        }), 200
+
+      # Rekam absensi dengan waktu lokal sesuai lokasi
       now_str = now_local.strftime("%Y-%m-%d %H:%M:%S")
       conn.execute(
           "INSERT INTO attendance (student_id, location_id, timestamp) VALUES (?, ?, ?)",
