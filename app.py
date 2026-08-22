@@ -46,6 +46,7 @@ def init_db():
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 nisn TEXT UNIQUE NOT NULL,
                 name TEXT NOT NULL,
+                class TEXT NOT NULL DEFAULT '-',
                 face_encoding TEXT NOT NULL
             )
         """)
@@ -56,11 +57,16 @@ def init_db():
                 timezone TEXT NOT NULL DEFAULT 'Asia/Jakarta'
             )
         """)
-    # Tambah kolom location_id ke attendance jika belum ada
+    # Migrasi: tambah kolom class jika belum ada (untuk DB lama)
+    try:
+      conn.execute("ALTER TABLE students ADD COLUMN class TEXT NOT NULL DEFAULT '-'")
+    except sqlite3.OperationalError:
+      pass
+    # Migrasi: tambah kolom location_id ke attendance jika belum ada
     try:
       conn.execute("ALTER TABLE attendance ADD COLUMN location_id INTEGER")
     except sqlite3.OperationalError:
-      pass  # Kolom sudah ada
+      pass
 
     conn.execute("""
             CREATE TABLE IF NOT EXISTS attendance (
@@ -101,29 +107,20 @@ def decode_image(base64_string):
   return np.array(img)
 
 
-# --- ROUTE DASHBOARD (CRUD SISWA) ---
+# --- ROUTE DASHBOARD (CRUD SISWA & LOKASI) ---
 @app.route("/")
 def dashboard():
   conn = get_db()
   students = conn.execute("SELECT * FROM students ORDER BY id DESC").fetchall()
   locations = conn.execute("SELECT * FROM locations ORDER BY id ASC").fetchall()
-  logs = conn.execute("""
-        SELECT a.id, s.nisn, s.name, a.timestamp,
-               COALESCE(l.name, '-') AS location_name
-        FROM attendance a
-        JOIN students s ON a.student_id = s.id
-        LEFT JOIN locations l ON a.location_id = l.id
-        ORDER BY a.timestamp DESC LIMIT 10
-    """).fetchall()
-  return render_template(
-    "dashboard.html", students=students, logs=logs, locations=locations
-  )
+  return render_template("dashboard.html", students=students, locations=locations)
 
 
 @app.route("/student/add", methods=["POST"])
 def add_student():
   nisn = request.form.get("nisn")
   name = request.form.get("name")
+  student_class = request.form.get("class", "-")
   image_data = request.form.get("image_data")
 
   if not nisn or not name or not image_data:
@@ -149,8 +146,8 @@ def add_student():
 
     conn = get_db()
     conn.execute(
-        "INSERT INTO students (nisn, name, face_encoding) VALUES (?, ?, ?)",
-        (nisn, name, encoding_json),
+        "INSERT INTO students (nisn, name, class, face_encoding) VALUES (?, ?, ?, ?)",
+        (nisn, name, student_class, encoding_json),
     )
     conn.commit()
     return jsonify({"status": "success", "message": "Siswa berhasil disimpan!"})
@@ -211,6 +208,55 @@ def api_locations():
   return jsonify([dict(r) for r in rows])
 
 
+# --- ROUTE RIWAYAT ABSENSI ---
+@app.route("/riwayat")
+def riwayat():
+  conn = get_db()
+  filter_kelas = request.args.get("kelas", "")
+  filter_lokasi = request.args.get("lokasi", "")
+  filter_tanggal = request.args.get("tanggal", "")
+
+  # Daftar kelas unik untuk dropdown filter
+  kelas_list = conn.execute(
+      "SELECT DISTINCT class FROM students WHERE class != '-' ORDER BY class"
+  ).fetchall()
+  lokasi_list = conn.execute("SELECT id, name FROM locations ORDER BY name").fetchall()
+
+  query = """
+        SELECT a.id, s.nisn, s.name, s.class,
+               a.timestamp,
+               COALESCE(l.name, '-') AS location_name
+        FROM attendance a
+        JOIN students s ON a.student_id = s.id
+        LEFT JOIN locations l ON a.location_id = l.id
+        WHERE 1=1
+    """
+  params = []
+
+  if filter_kelas:
+    query += " AND s.class = ?"
+    params.append(filter_kelas)
+  if filter_lokasi:
+    query += " AND a.location_id = ?"
+    params.append(filter_lokasi)
+  if filter_tanggal:
+    query += " AND a.timestamp LIKE ?"
+    params.append(filter_tanggal + "%")
+
+  query += " ORDER BY a.timestamp DESC"
+  logs = conn.execute(query, params).fetchall()
+
+  return render_template(
+      "riwayat.html",
+      logs=logs,
+      kelas_list=kelas_list,
+      lokasi_list=lokasi_list,
+      filter_kelas=filter_kelas,
+      filter_lokasi=filter_lokasi,
+      filter_tanggal=filter_tanggal,
+  )
+
+
 # --- ROUTE SCAN ABSENSI ---
 @app.route("/scan")
 def scan_page():
@@ -243,7 +289,7 @@ def verify_face():
   target_encoding = unknown_encodings[0]
 
   conn = get_db()
-  students = conn.execute("SELECT id, nisn, name, face_encoding FROM students").fetchall()
+  students = conn.execute("SELECT id, nisn, name, class, face_encoding FROM students").fetchall()
 
   # Tentukan timezone berdasarkan lokasi yang dipilih
   scan_tz = DEFAULT_TZ
@@ -275,6 +321,7 @@ def verify_face():
             "message": f'{student["name"]} sudah absen hari ini.',
             "nisn": student["nisn"],
             "name": student["name"],
+            "class": student["class"],
         }), 200
 
       # Rekam absensi dengan waktu lokal sesuai lokasi
@@ -288,6 +335,7 @@ def verify_face():
           "status": "success",
           "nisn": student["nisn"],
           "name": student["name"],
+          "class": student["class"],
           "time": now_str,
           "location": location_name or "-",
       })
