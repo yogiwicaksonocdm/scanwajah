@@ -70,6 +70,13 @@
                     statusBox.className = "p-4 rounded-lg bg-slate-100 border border-slate-200";
                     statusMsg.innerText = "Mencari wajah...";
                 }, 3500);
+            } else if (data.status === 'already_absent') {
+                statusBox.className = "p-4 rounded-lg bg-orange-100 border border-orange-300";
+                statusMsg.innerHTML = `⚠ Sudah Absen Hari Ini<br><span class="text-base text-orange-800 font-bold">${data.name}</span> (${data.nisn})<br><span class="text-xs text-slate-500">Anda sudah melakukan absensi hari ini.</span>`;
+                setTimeout(() => {
+                    statusBox.className = "p-4 rounded-lg bg-slate-100 border border-slate-200";
+                    statusMsg.innerText = "Mencari wajah...";
+                }, 3500);
             } else if (data.status === 'unknown') {
                 statusBox.className = "p-4 rounded-lg bg-yellow-100 border border-yellow-300";
                 statusMsg.innerText = "Wajah terdeteksi namun tidak dikenal.";
