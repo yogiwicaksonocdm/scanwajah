@@ -162,6 +162,52 @@ def add_student():
     return jsonify({"status": "error", "message": str(e)}), 500
 
 
+@app.route("/student/<int:id>", methods=["GET"])
+def get_student(id):
+  conn = get_db()
+  student = conn.execute("SELECT id, nisn, name, class FROM students WHERE id = ?", (id,)).fetchone()
+  if not student:
+    return jsonify({"status": "error", "message": "Siswa tidak ditemukan."}), 404
+  return jsonify(dict(student))
+
+
+@app.route("/student/edit/<int:id>", methods=["POST"])
+def edit_student(id):
+  nisn = request.form.get("nisn")
+  name = request.form.get("name")
+  student_class = request.form.get("class", "-")
+  image_data = request.form.get("image_data")
+
+  if not nisn or not name:
+    return jsonify({"status": "error", "message": "NISN dan Nama wajib diisi!"}), 400
+
+  conn = get_db()
+  try:
+    if image_data:
+      # Update wajah juga
+      rgb_frame = decode_image(image_data)
+      encodings = face_recognition.face_encodings(rgb_frame)
+      if not encodings:
+        return jsonify({"status": "error", "message": "Wajah tidak terdeteksi. Silakan coba lagi."}), 400
+      encoding_json = json.dumps(encodings[0].tolist())
+      conn.execute(
+          "UPDATE students SET nisn = ?, name = ?, class = ?, face_encoding = ? WHERE id = ?",
+          (nisn, name, student_class, encoding_json, id),
+      )
+    else:
+      # Update tanpa ganti wajah
+      conn.execute(
+          "UPDATE students SET nisn = ?, name = ?, class = ? WHERE id = ?",
+          (nisn, name, student_class, id),
+      )
+    conn.commit()
+    return jsonify({"status": "success", "message": "Data siswa berhasil diupdate!"})
+  except sqlite3.IntegrityError:
+    return jsonify({"status": "error", "message": "NISN sudah digunakan oleh siswa lain."}), 400
+  except Exception as e:
+    return jsonify({"status": "error", "message": str(e)}), 500
+
+
 @app.route("/student/delete/<int:id>", methods=["POST"])
 def delete_student(id):
   conn = get_db()
